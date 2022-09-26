@@ -21,7 +21,7 @@
 		http://semver.org/
 		-->
 		<version>
-			1.7.0.0
+			1.7.1.0
 		</version>
 		<releaseNotes>
             - FindAccountsForService throws on iOS #370

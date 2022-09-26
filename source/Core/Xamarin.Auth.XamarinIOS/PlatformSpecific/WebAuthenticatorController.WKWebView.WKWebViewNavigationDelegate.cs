@@ -17,6 +17,7 @@ using System;
 using System.Threading.Tasks;
 using System.Text;
 using System.Collections.Generic;
+using CoreFoundation;
 
 #if !__UNIFIED__
 using MonoTouch.Foundation;
@@ -41,7 +42,7 @@ namespace Xamarin.Auth
 namespace Xamarin.Auth._MobileServices
 #endif
 {
-    internal partial class WebAuthenticatorController
+    public partial class WebAuthenticatorController
     {
         //==============================================================================================================
         #region     WKWebView
@@ -83,7 +84,8 @@ namespace Xamarin.Auth._MobileServices
         internal class WKWebViewNavigationDelegate : WebKit.WKNavigationDelegate
         {
             WebAuthenticatorController controller = null;
-
+            Uri lastUrl;
+            
             public WKWebViewNavigationDelegate(WebAuthenticatorController c)
             {
                 controller = c;
@@ -100,7 +102,7 @@ namespace Xamarin.Auth._MobileServices
             {
                 #if DEBUG
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine($"WKWebViewNavigationDelegate.DecidePolicy ");
+                sb.AppendLine($"WKWebViewNavigationDelegate.DecidePolicy3 ");
                 sb.AppendLine($"        webView.Url.AbsoluteString = {webView.Url.AbsoluteString}");
                 System.Diagnostics.Debug.WriteLine(sb.ToString());
                 #endif
@@ -135,6 +137,18 @@ namespace Xamarin.Auth._MobileServices
                 {
                     throw new NotImplementedException("code - Explicit/Server");
                 }
+                
+                if (!webView.Url.Scheme.Equals("http") && !webView.Url.Scheme.Equals("https"))
+                {
+                    if (UIApplication.SharedApplication.CanOpenUrl(webView.Url))
+                    {
+                        DispatchQueue.MainQueue.DispatchAsync(
+                            () => UIApplication.SharedApplication.OpenUrl(webView.Url));
+                        decisionHandler(WKNavigationActionPolicy.Cancel);
+                        return;
+                    }
+                }
+                
                 // Navigation Allowed?
                 // page will not load without this one!
                 decisionHandler(WKNavigationActionPolicy.Allow);
@@ -174,32 +188,30 @@ namespace Xamarin.Auth._MobileServices
             {
                 // Provisional Navigation Failed? WAT?
 
-                if  // loading custom url scheme will result in unsupported URL
-                    (
-                        error.Code == -1002
-                        ||
-                        error.LocalizedDescription == "unsupported URL"
-                    )
+                string url_redirect = error.UserInfo[new NSString("NSErrorFailingURLKey")].ToString();
+
+                // loading custom url scheme will result in unsupported URL
+                if (error.Code == -1002 || error.LocalizedDescription == "unsupported URL")
                 {
-                    //custom url schema
+                    // custom url schema
                     // NSUrl url_ios = webView.Url; // old URL
-                    string url_redirect = error.UserInfo[new NSString("NSErrorFailingURLKey")].ToString();
-                    System.Uri uri = new Uri(url_redirect);
+                    Uri uri = new Uri(url_redirect);
                     IDictionary<string, string> fragment = WebEx.FormDecode(uri.Fragment);
 
-                    Account account = new Account
-                                            (
-                                                "",
-                                                new Dictionary<string, string>(fragment)
-                                            );
+                    Account account =
+                        new Account(
+                            "",
+                            new Dictionary<string, string>(fragment));
                     controller.authenticator.OnSucceeded(account);
                 }
 
-                #if DEBUG
+#if DEBUG
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine($"WKWebViewNavigationDelegate.DidFailProvisionalNavigation ");
                 sb.AppendLine($"        error.LocalizedDescription = {error.LocalizedDescription}");
                 sb.AppendLine($"        webView.Url.AbsoluteString = {webView.Url.AbsoluteString}");
+                sb.AppendLine($"        Failing url = {url_redirect}");
+
                 System.Diagnostics.Debug.WriteLine(sb.ToString());
                 #endif
 
@@ -221,6 +233,10 @@ namespace Xamarin.Auth._MobileServices
                 System.Diagnostics.Debug.WriteLine(sb.ToString());
                 #endif
 
+                if (!controller.authenticator.HasCompleted)
+                {
+                    controller.authenticator.OnPageLoading(new Uri(webView.Url.AbsoluteString));
+                }
                 return;
             }
 
@@ -239,6 +255,12 @@ namespace Xamarin.Auth._MobileServices
                 System.Diagnostics.Debug.WriteLine(sb.ToString());
                 #endif
 
+                var url = new Uri(webView.Url.AbsoluteString);
+                if (url != lastUrl && !controller.authenticator.HasCompleted)
+                {
+                    lastUrl = url;
+                    controller.authenticator.OnPageLoaded(url);
+                }
                 return;
             }
 

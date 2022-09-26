@@ -24,7 +24,7 @@
         http://semver.org/
         -->
 		<version>
-			1.7.0.0
+			1.7.1.0
         </version>
 		<releaseNotes>
             - FindAccountsForService throws on iOS #370
@@ -281,21 +281,6 @@
             │   ├── Xamarin.Auth.pdb
             │   └── Xamarin.Auth.pri
         -->
-        <file
-            src="..\source\Core\Xamarin.Auth.UniversalWindowsPlatform\bin\Release\Xamarin.Auth.dll"
-            target="lib/uap10.0/Xamarin.Auth.dll"
-            >
-        </file>
-        <file
-            src="..\source\Core\Xamarin.Auth.UniversalWindowsPlatform\bin\Release\Xamarin.Auth.pdb"
-            target="lib/uap10.0/Xamarin.Auth.pdb"
-            >
-        </file>
-        <file
-            src="..\source\Core\Xamarin.Auth.UniversalWindowsPlatform\bin\Release\Xamarin.Auth.pri"
-            target="lib/uap10.0/Xamarin.Auth.pri"
-            >
-        </file>
         <!--
         mc++ 2017-10-17 output changed??
         <file
@@ -304,16 +289,5 @@
             >
         </file>
         -->		
-        <file
-            src="..\source\Core\Xamarin.Auth.UniversalWindowsPlatform\bin\Release\WebAuthenticatorPage.xbf"
-            target="lib/uap10.0/Xamarin.Auth/WebAuthenticatorPage.xbf"
-            >
-        </file>
-        <file
-            src="..\source\Core\Xamarin.Auth.UniversalWindowsPlatform\bin\Release\Xamarin.Auth.xr.xml"
-            target="lib/uap10.0/Xamarin.Auth/Xamarin.Auth.xr.xml"
-            >
-        </file>
-
     </files>
 </package>

@@ -14,8 +14,11 @@
 //    limitations under the License.
 //
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
+using UniformTypeIdentifiers;
 
 #if !__UNIFIED__
 using MonoTouch.Foundation;
@@ -43,7 +46,7 @@ namespace Xamarin.Auth._MobileServices
     /// <summary>
     /// The ViewController that the WebAuthenticator presents to the user.
     /// </summary>
-    internal partial class WebAuthenticatorController : UIViewController
+    public partial class WebAuthenticatorController : UIViewController
     {
         protected WebAuthenticator authenticator;
 
@@ -171,25 +174,44 @@ namespace Xamarin.Auth._MobileServices
             return web_view;
         }
 
+        public class SchemeHandler : NSObject, IWKUrlSchemeHandler
+        {
+            [Export("webView:startURLSchemeTask:")]
+            public void StartUrlSchemeTask(WKWebView webView, IWKUrlSchemeTask urlSchemeTask)
+            {
+                var response = new NSHttpUrlResponse(
+                    url: urlSchemeTask.Request.Url,
+                    mimetype: "text/html",
+                    expectedContentLength: -1,
+                    textEncodingName: null);
+            
+                urlSchemeTask.DidReceiveResponse(response);
+                urlSchemeTask.DidFinish();
+            }
+
+            [Export("webView:stopURLSchemeTask:")]
+            public void StopUrlSchemeTask(WKWebView webView, IWKUrlSchemeTask urlSchemeTask)
+            {
+            }
+        }
+
         protected UIView PrepareWKWebView()
         {
-            WebKit.WKWebViewConfiguration wk_web_view_configuration = null;
+            WKWebViewConfiguration wk_web_view_configuration = null;
 
-            if
-                (
-                    ObjCRuntime.Class.GetHandle("WKWebView") != IntPtr.Zero
-                    &&
-                    UIDevice.CurrentDevice.CheckSystemVersion(8, 0)
-                )
+            if (ObjCRuntime.Class.GetHandle("WKWebView") != IntPtr.Zero
+                && UIDevice.CurrentDevice.CheckSystemVersion(8, 0))
             {
-                wk_web_view_configuration = new WebKit.WKWebViewConfiguration();
+                wk_web_view_configuration = new WKWebViewConfiguration();
+                wk_web_view_configuration.SetUrlSchemeHandler(new SchemeHandler(), "com.netcompany.aula-native");
+                wk_web_view_configuration.SetUrlSchemeHandler(new SchemeHandler(), "com.netcompany.aula-native-staff");
 
                 if (UIDevice.CurrentDevice.CheckSystemVersion(9, 0))
                 {
                     wk_web_view_configuration.WebsiteDataStore = WKWebsiteDataStore.NonPersistentDataStore;
                 }
 
-                wk_web_view = new WebKit.WKWebView(View.Frame, wk_web_view_configuration)
+                wk_web_view = new WKWebView(View.Frame, wk_web_view_configuration)
                 {
                     UIDelegate = new WKWebViewUIDelegate(this),
                     NavigationDelegate = new WKWebViewNavigationDelegate(this),

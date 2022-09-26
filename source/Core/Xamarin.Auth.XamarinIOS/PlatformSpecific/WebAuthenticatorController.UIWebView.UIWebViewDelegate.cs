@@ -40,7 +40,7 @@ namespace Xamarin.Auth
 namespace Xamarin.Auth._MobileServices
 #endif
 {
-    internal partial class WebAuthenticatorController
+    public partial class WebAuthenticatorController
     {
         //==============================================================================================================
 #region     UIWebView

@@ -18,6 +18,7 @@ PACKAGES_CONFIG_MD5=$TOOLS_DIR/packages.config.md5sum
 ADDINS_PACKAGES_CONFIG=$ADDINS_DIR/packages.config
 MODULES_PACKAGES_CONFIG=$MODULES_DIR/packages.config
 
+echo "1"
 # Define md5sum or md5 depending on Linux/OSX
 MD5_EXE=
 if [[ "$(uname -s)" == "Darwin" ]]; then
@@ -26,10 +27,12 @@ else
     MD5_EXE="md5sum"
 fi
 
+echo "2"
 # Define default arguments.
 SCRIPT="build.cake"
 CAKE_ARGUMENTS=()
 
+echo "3"
 # Parse arguments.
 for i in "$@"; do
     case $1 in
@@ -40,11 +43,13 @@ for i in "$@"; do
     shift
 done
 
+echo "4"
 # Make sure the tools folder exist.
 if [ ! -d "$TOOLS_DIR" ]; then
   mkdir "$TOOLS_DIR"
 fi
 
+echo "5"
 # Make sure that packages.config exist.
 if [ ! -f "$TOOLS_DIR/packages.config" ]; then
     echo "Downloading packages.config..."
@@ -55,6 +60,7 @@ if [ ! -f "$TOOLS_DIR/packages.config" ]; then
     fi
 fi
 
+echo "6"
 # Download NuGet if it does not exist.
 if [ ! -f "$NUGET_EXE" ]; then
     echo "Downloading NuGet..."
@@ -65,22 +71,26 @@ if [ ! -f "$NUGET_EXE" ]; then
     fi
 fi
 
+echo "7"
 # Restore tools from NuGet.
 pushd "$TOOLS_DIR" >/dev/null
 if [ ! -f "$PACKAGES_CONFIG_MD5" ] || [ "$( cat "$PACKAGES_CONFIG_MD5" | sed 's/\r$//' )" != "$( $MD5_EXE "$PACKAGES_CONFIG" | awk '{ print $1 }' )" ]; then
     find . -type d ! -name . ! -name 'Cake.Bakery' | xargs rm -rf
 fi
 
+echo "8"
 mono "$NUGET_EXE" install -ExcludeVersion
 if [ $? -ne 0 ]; then
     echo "Could not restore NuGet tools."
     exit 1
 fi
 
+echo "9"
 $MD5_EXE "$PACKAGES_CONFIG" | awk '{ print $1 }' >| "$PACKAGES_CONFIG_MD5"
 
 popd >/dev/null
 
+echo "10"
 # Restore addins from NuGet.
 if [ -f "$ADDINS_PACKAGES_CONFIG" ]; then
     pushd "$ADDINS_DIR" >/dev/null
@@ -94,6 +104,7 @@ if [ -f "$ADDINS_PACKAGES_CONFIG" ]; then
     popd >/dev/null
 fi
 
+echo "11"
 # Restore modules from NuGet.
 if [ -f "$MODULES_PACKAGES_CONFIG" ]; then
     pushd "$MODULES_DIR" >/dev/null
@@ -107,11 +118,13 @@ if [ -f "$MODULES_PACKAGES_CONFIG" ]; then
     popd >/dev/null
 fi
 
+echo "12"
 # Make sure that Cake has been installed.
 if [ ! -f "$CAKE_EXE" ]; then
     echo "Could not find Cake.exe at '$CAKE_EXE'."
     exit 1
 fi
 
+echo "13"
 # Start Cake
 exec mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
