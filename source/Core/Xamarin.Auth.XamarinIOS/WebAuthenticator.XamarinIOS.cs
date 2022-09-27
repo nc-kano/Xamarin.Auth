@@ -23,6 +23,9 @@ using AuthenticateUIType =
             //System.Object
             ;
 using System.Text;
+using Foundation;
+using UIKit;
+using WebKit;
 
 #if !AZURE_MOBILE_SERVICES
 using Xamarin.Auth;
@@ -53,27 +56,9 @@ namespace Xamarin.Auth._MobileServices
         /// </returns>
         protected override AuthenticateUIType GetPlatformUI()
         {
-            AuthenticateUIType ui = null;
-            if (this.IsUsingNativeUI == true)
+            AuthenticateUIType ui;
+            if (IsUsingNativeUI)
             {
-                Uri uri = GetInitialUrlAsync().Result;
-                IDictionary<string, string> query_parts = WebEx.FormDecode(uri.Query);
-                if (query_parts.ContainsKey("redirect_uri"))
-                {
-                    Uri redirect_uri = new Uri(query_parts["redirect_uri"]);
-                    string scheme = redirect_uri.Scheme;
-                    if (scheme.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        sb.AppendLine("WARNING");
-                        sb.AppendLine($"Scheme = {scheme}");
-                        sb.AppendLine($"Native UI used with http[s] schema!");
-                        sb.AppendLine($"Redirect URL will be loaded in Native UI!");
-                        sb.AppendLine($"OAuth Data parsing might fail!");
-
-                        ShowErrorForNativeUI(sb.ToString());
-                    }
-                }
                 ui = GetPlatformUINative();
             }
             else
@@ -109,9 +94,23 @@ namespace Xamarin.Auth._MobileServices
         /// <seealso cref="ClearCookiesBeforeLogin"/>
         public static void ClearCookies()
         {
+            NSUrlCache.SharedCache.RemoveAllCachedResponses();
+
+#if __IOS__
+            if (UIDevice.CurrentDevice.CheckSystemVersion(11, 0))
+            {
+                WKWebsiteDataStore.DefaultDataStore.HttpCookieStore.GetAllCookies((cookies) =>
+                {
+                    foreach (var cookie in cookies)
+                    {
+                        WKWebsiteDataStore.DefaultDataStore.HttpCookieStore.DeleteCookie(cookie, null);
+                    }
+                });
+            }
+#endif
             var store = Foundation.NSHttpCookieStorage.SharedStorage;
-            var cookies = store.Cookies;
-            foreach (var c in cookies)
+            var cookieses = store.Cookies;
+            foreach (var c in cookieses)
             {
                 store.DeleteCookie(c);
             }
@@ -124,8 +123,6 @@ namespace Xamarin.Auth._MobileServices
 
             return;
         }
-
-
     }
 }
 
