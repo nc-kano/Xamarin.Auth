@@ -12,7 +12,7 @@ TOOLS_DIR=$SCRIPT_DIR/tools
 ADDINS_DIR=$TOOLS_DIR/Addins
 MODULES_DIR=$TOOLS_DIR/Modules
 NUGET_EXE=$TOOLS_DIR/nuget.exe
-CAKE_EXE=$TOOLS_DIR/Cake/Cake.exe
+# CAKE_EXE=$TOOLS_DIR/Cake/Cake.exe
 PACKAGES_CONFIG=$TOOLS_DIR/packages.config
 PACKAGES_CONFIG_MD5=$TOOLS_DIR/packages.config.md5sum
 ADDINS_PACKAGES_CONFIG=$ADDINS_DIR/packages.config
@@ -108,10 +108,10 @@ if [ -f "$MODULES_PACKAGES_CONFIG" ]; then
 fi
 
 # Make sure that Cake has been installed.
-if [ ! -f "$CAKE_EXE" ]; then
-    echo "Could not find Cake.exe at '$CAKE_EXE'."
-    exit 1
-fi
+# if [ ! -f "$CAKE_EXE" ]; then
+#     echo "Could not find Cake.exe at '$CAKE_EXE'."
+#     exit 1
+# fi
 
 # Start Cake
-exec mono "$CAKE_EXE" $SCRIPT "${CAKE_ARGUMENTS[@]}"
+exec dotnet cake $SCRIPT "${CAKE_ARGUMENTS[@]}"
