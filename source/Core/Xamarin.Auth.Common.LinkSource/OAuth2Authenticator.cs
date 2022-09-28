@@ -48,7 +48,7 @@ namespace Xamarin.Auth._MobileServices
         string clientSecret;
         string scope;
         Uri authorizeUrl;
-        Uri redirectUrl;
+        public Uri redirectUrl;
         Uri accessTokenUrl;
         GetUsernameAsyncFunc getUsernameAsync;
 

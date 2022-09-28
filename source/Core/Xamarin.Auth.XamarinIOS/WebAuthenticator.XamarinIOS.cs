@@ -15,6 +15,8 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Threading;
 
@@ -23,6 +25,12 @@ using AuthenticateUIType =
             //System.Object
             ;
 using System.Text;
+using AuthenticationServices;
+using Foundation;
+using ObjCRuntime;
+using SafariServices;
+using UIKit;
+using WebKit;
 
 #if !AZURE_MOBILE_SERVICES
 using Xamarin.Auth;
@@ -36,6 +44,7 @@ namespace Xamarin.Auth
 namespace Xamarin.Auth._MobileServices
 #endif
 {
+    
     /// <summary>
     /// An authenticator that displays a web page.
     /// </summary>
@@ -56,24 +65,7 @@ namespace Xamarin.Auth._MobileServices
             AuthenticateUIType ui = null;
             if (this.IsUsingNativeUI == true)
             {
-                Uri uri = GetInitialUrlAsync().Result;
-                IDictionary<string, string> query_parts = WebEx.FormDecode(uri.Query);
-                if (query_parts.ContainsKey("redirect_uri"))
-                {
-                    Uri redirect_uri = new Uri(query_parts["redirect_uri"]);
-                    string scheme = redirect_uri.Scheme;
-                    if (scheme.StartsWith("http", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        sb.AppendLine("WARNING");
-                        sb.AppendLine($"Scheme = {scheme}");
-                        sb.AppendLine($"Native UI used with http[s] schema!");
-                        sb.AppendLine($"Redirect URL will be loaded in Native UI!");
-                        sb.AppendLine($"OAuth Data parsing might fail!");
-
-                        ShowErrorForNativeUI(sb.ToString());
-                    }
-                }
+                ClearCookies();
                 ui = GetPlatformUINative();
             }
             else
