@@ -450,24 +450,22 @@ namespace Xamarin.Auth
 
         public static PendingIntent CreatePendingIntent(int actionSourceId)
         {
-            Intent actionIntent = new Intent
-                                        (
-                                            activity.ApplicationContext, 
-                                            typeof(CustomTabsActionsBroadcastReceiver)
-                                        );
-            actionIntent.PutExtra
-                        (
-                            CustomTabsActionsBroadcastReceiver.KEY_ACTION_SOURCE, 
-                            actionSourceId
-                        );
+            Intent actionIntent =
+                new Intent(
+                    activity.ApplicationContext,
+                    typeof(CustomTabsActionsBroadcastReceiver));
 
-            PendingIntent broadcast = PendingIntent.GetBroadcast
-                                                    (
-                                                       activity.ApplicationContext,
-                                                       actionSourceId,
-                                                       actionIntent,
-                                                       0
-                                                    );
+            actionIntent.PutExtra(
+                CustomTabsActionsBroadcastReceiver.KEY_ACTION_SOURCE,
+                actionSourceId);
+
+            PendingIntent broadcast =
+                PendingIntent.GetBroadcast(
+                    activity.ApplicationContext,
+                    actionSourceId,
+                    actionIntent,
+                    PendingIntentFlags.Immutable
+                );
             return broadcast;
         }
 
