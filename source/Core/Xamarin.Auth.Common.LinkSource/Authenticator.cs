@@ -20,6 +20,8 @@ using System.Threading;
 using Xamarin.Utilities;
 
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 //--------------------------------------------------------------------
 //	Original defines
@@ -81,6 +83,13 @@ namespace Xamarin.Auth._MobileServices
         /// Occurs when there an error is encountered when authenticating.
         /// </summary>
         public event EventHandler<AuthenticatorErrorEventArgs> Error;
+
+        /// <summary>
+        /// LogoutUrl to terminate session on error or authentication cancellation
+        /// </summary>
+        public string LogoutUrl;
+
+        public HttpRequestHeaders DefaultHeaders;
 
         /// <summary>
         /// Gets whether this authenticator has completed its interaction with the user.
@@ -235,6 +244,25 @@ namespace Xamarin.Auth._MobileServices
         /// </summary>
         public void OnCancelled()
         {
+            if (!string.IsNullOrEmpty(LogoutUrl))
+            {
+                Task.Run(async () =>
+                {
+                    if (DefaultHeaders == null)
+                    {
+                        return;
+                    }
+                    HttpClient client = new HttpClient();
+                    foreach (var httpRequestHeader in DefaultHeaders)
+                    {
+                        client.DefaultRequestHeaders.Add(httpRequestHeader.Key, httpRequestHeader.Value);
+                    }
+                    HttpResponseMessage response = await client.GetAsync(LogoutUrl).ConfigureAwait(false);
+                    string text = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                });
+            }
+
+
             if (HasCompleted)
                 return;
 
